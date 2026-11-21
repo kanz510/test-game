@@ -1,157 +1,178 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Perfect Hotel</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-    <script>
-      // Giữ hàm quảng cáo rỗng để game không bị lỗi thiếu biến khi chạy offline/GitHub Pages
-      window.adsbygoogle = window.adsbygoogle || [];
-      window.adConfig = window.adBreak = function () {};
-      window.passBeforeAdData = function () {};
-      window.adBreakDoneData = function () {
-        if (window.myGameInstance) window.myGameInstance.SendMessage("GameObjectAds", "resumeGame");
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>My Perfect Hotel</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #002b50;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      touch-action: none;
+    }
+    #game-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #unity-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 560px;
+      background: #00c565;
+    }
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #002b50;
+      color: #fff;
+      z-index: 50;
+      padding: 24px;
+      text-align: center;
+    }
+    #loading-title { font-size: 24px; font-weight: 800; margin-bottom: 16px; }
+    #progress-track {
+      width: min(80vw, 320px);
+      height: 14px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00c565, #38bdf8);
+      transition: width 0.15s ease;
+    }
+    #loading-pct { margin-top: 10px; font-size: 14px; color: #cbd5e1; }
+    #btn-sound-toggle {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 99999;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      background: rgba(15, 23, 42, 0.78);
+      color: #fff;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+  <script>
+    // Offline PokiSDK Mock (Không quảng cáo + Nhận thưởng tức thì)
+    window.PokiSDK = {
+      init: function () { return Promise.resolve(); },
+      setDebug: function () {},
+      gameLoadingStart: function () {},
+      gameLoadingFinished: function () {},
+      gameplayStart: function () {},
+      gameplayStop: function () {},
+      commercialBreak: function () { return Promise.resolve(); },
+      rewardedBreak: function () { return Promise.resolve(true); },
+      displayAd: function () {},
+      destroyAd: function () {},
+      customEvent: function () {},
+      measure: function () {},
+      movePill: function () {},
+      logError: function () {},
+      openExternalLink: function () {},
+      isAdBlocked: function () { return false; },
+      getLanguage: function () { return "en"; },
+      getURLParam: function () { return ""; }
+    };
+
+    // Bắt AudioContext an toàn qua AudioNode.prototype.connect để hỗ trợ nút tắt/bật tiếng
+    (function () {
+      var contexts = new Set();
+      var origConnect = AudioNode.prototype.connect;
+      AudioNode.prototype.connect = function () {
+        if (this.context) contexts.add(this.context);
+        return origConnect.apply(this, arguments);
       };
-      window.gainReward = function () {
-        if (window.myGameInstance) {
-          window.myGameInstance.SendMessage("GameObjectAds", "resumeGameRewarded");
-          window.myGameInstance.SendMessage("GameObjectAds", "rewardAdsCompleted");
-        }
-      };
-      window.cancelReward = window.gainReward;
-      window.noRewardAdsAvailable = window.gainReward;
-      window.showNextAd = function () { setTimeout(window.adBreakDoneData, 50); };
-      window.showReward = function () { setTimeout(window.gainReward, 50); };
-
-      // Bắt AudioContext an toàn qua AudioNode.prototype.connect (không đụng vào constructor AudioContext)
-      (function () {
-        var contexts = new Set();
-        var origConnect = AudioNode.prototype.connect;
-        AudioNode.prototype.connect = function () {
-          if (this.context) contexts.add(this.context);
-          return origConnect.apply(this, arguments);
-        };
-        window.__toggleGameMute = function (mute) {
-          contexts.forEach(function (ctx) {
-            try {
-              if (mute) ctx.suspend();
-              else ctx.resume();
-            } catch (e) {}
-          });
-        };
-      })();
-    </script>
-    <style>
-      #btn-sound-toggle {
-        position: fixed;
-        top: 14px;
-        right: 14px;
-        z-index: 99999;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.45);
-        background: rgba(15, 23, 42, 0.78);
-        color: #fff;
-        font-size: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-        -webkit-tap-highlight-color: transparent;
-      }
-    </style>
-  </head>
-  <body>
-    <button id="btn-sound-toggle" title="Bật/Tắt âm thanh">🔊</button>
-    <script>
-      (function () {
-        var isMuted = false;
-        var btn = document.getElementById("btn-sound-toggle");
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          isMuted = !isMuted;
-          btn.textContent = isMuted ? "🔇" : "🔊";
-          if (window.__toggleGameMute) window.__toggleGameMute(isMuted);
-        });
-      })();
-    </script>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=640></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-mobile-warning">
-        WebGL builds are not supported on mobile devices.
-      </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">Perfect Hotel</div>
-      </div>
-    </div>
-    <script>
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/My_Perfect_Hotel_output_v17.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/My_Perfect_Hotel_output_v17.data",
-        frameworkUrl: buildUrl + "/My_Perfect_Hotel_output_v17.framework.js",
-        codeUrl: buildUrl + "/My_Perfect_Hotel_output_v17.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "perfect",
-        productName: "Perfect Hotel",
-        productVersion: "1",
-      };
-
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
-      var mobileWarning = document.querySelector("#unity-mobile-warning");
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        container.className = "unity-mobile";
-        config.devicePixelRatio = 1;
-        canvas.style.width = "100vw";
-        canvas.style.height = "100dvh";
-        mobileWarning.style.display = "none";
-      } else {
-        canvas.style.width = "960px";
-        canvas.style.height = "640px";
-      }
-      loadingBar.style.display = "block";
-      var myGameInstance = null;
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          myGameInstance = unityInstance;
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-        }).catch((message) => {
-          alert(message);
+      window.__toggleGameMute = function (mute) {
+        contexts.forEach(function (ctx) {
+          try {
+            if (mute) ctx.suspend();
+            else ctx.resume();
+          } catch (e) {}
         });
       };
-      document.body.appendChild(script);
-    </script>
-  </body>
+    })();
+  </script>
+</head>
+<body>
+  <button id="btn-sound-toggle" title="Bật/Tắt âm thanh">🔊</button>
+  <div id="loading-overlay">
+    <div id="loading-title">My Perfect Hotel</div>
+    <div id="progress-track"><div id="progress-fill"></div></div>
+    <div id="loading-pct">Đang tải... 0%</div>
+  </div>
+  <div id="game-wrap">
+    <canvas id="unity-canvas"></canvas>
+  </div>
+
+  <script>
+    (function () {
+      var isMuted = false;
+      var btn = document.getElementById("btn-sound-toggle");
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        isMuted = !isMuted;
+        btn.textContent = isMuted ? "🔇" : "🔊";
+        if (window.__toggleGameMute) window.__toggleGameMute(isMuted);
+      });
+    })();
+
+    var buildUrl = "Build";
+    var loaderUrl = buildUrl + "/ea153e321edf23b9a40b38d65ce41d01.loader.js";
+    var config = {
+      dataUrl: buildUrl + "/101a0553a2917fd4c62a7e2159d30814.data",
+      frameworkUrl: buildUrl + "/2809ee090e7f1bf0e1a32425590981e7.framework.js",
+      codeUrl: buildUrl + "/9d94f3fbc22c5914756c67722e0cdaca.wasm",
+      companyName: "master",
+      productName: "My Hotel",
+      productVersion: "1.0.3",
+      devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+    };
+
+    var canvas = document.getElementById("unity-canvas");
+    var loadingOverlay = document.getElementById("loading-overlay");
+    var progressFill = document.getElementById("progress-fill");
+    var progressPct = document.getElementById("loading-pct");
+
+    var script = document.createElement("script");
+    script.src = loaderUrl;
+    script.onload = function () {
+      createUnityInstance(canvas, config, function (progress) {
+        var pct = Math.round(progress * 100);
+        progressFill.style.width = pct + "%";
+        progressPct.textContent = "Đang tải... " + pct + "%";
+      }).then(function (unityInstance) {
+        window.myGameInstance = unityInstance;
+        loadingOverlay.style.display = "none";
+      }).catch(function (err) {
+        progressPct.textContent = "Lỗi tải game: " + err;
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
 </html>

@@ -21,17 +21,13 @@
     setTimeout(window.gainReward, 50);
   };
 
-  // === 1. HOOK THỜI GIAN CHO SPEED HACK ===
+  // === 1. HOOK THỜI GIAN CHO SPEED HACK (AN TOÀN CHO ÂM THANH) ===
   let speedMultiplier = 1;
   const origPerfNow = performance.now.bind(performance);
-  const origDateNow = Date.now.bind(Date);
   const origRAF = window.requestAnimationFrame.bind(window);
 
   let lastRealPerf = origPerfNow();
   let virtualPerf = lastRealPerf;
-
-  let lastRealDate = origDateNow();
-  let virtualDate = lastRealDate;
 
   performance.now = function () {
     const real = origPerfNow();
@@ -40,21 +36,29 @@
     return virtualPerf;
   };
 
-  Date.now = function () {
-    const real = origDateNow();
-    virtualDate += (real - lastRealDate) * speedMultiplier;
-    lastRealDate = real;
-    return Math.floor(virtualDate);
-  };
-
   window.requestAnimationFrame = function (cb) {
-    return origRAF(function () {
+    if (speedMultiplier === 1) {
+      return origRAF(cb);
+    }
+    return origRAF(function (realTs) {
       cb(performance.now());
     });
   };
 
-  // === 2. HOOK WEBASSEMBLY MEMORY ĐỂ QUÉT & SỬA TIỀN/KIM CƯƠNG ===
+  // === 2. HOOK WEBASSEMBLY MEMORY & WEBAUDIO MUTE ===
   window.__wasmMemory = null;
+  const origAC = window.AudioContext || window.webkitAudioContext;
+  const capturedAudioContexts = [];
+  if (origAC) {
+    const WrappedAC = function (...args) {
+      const ctx = new origAC(...args);
+      capturedAudioContexts.push(ctx);
+      return ctx;
+    };
+    WrappedAC.prototype = origAC.prototype;
+    if (window.AudioContext) window.AudioContext = WrappedAC;
+    if (window.webkitAudioContext) window.webkitAudioContext = WrappedAC;
+  }
 
   function captureMemory(importObj, result) {
     try {
@@ -235,13 +239,14 @@
       <button id="mod-toggle">🛠️ MOD MENU</button>
       <div id="mod-panel">
         <div class="mod-sec">
-          <div class="mod-title">⚡ Tốc độ Game (Speed Hack)</div>
+          <div class="mod-title">⚡ Tốc độ Game & Âm thanh</div>
           <div class="mod-row" id="speed-btns">
             <button class="mod-btn active" data-spd="1">1x</button>
             <button class="mod-btn" data-spd="2">2x</button>
             <button class="mod-btn" data-spd="3">3x</button>
             <button class="mod-btn" data-spd="5">5x</button>
           </div>
+          <button id="btn-mute-audio" class="mod-btn" style="width:100%;">🔊 Âm thanh: Đang Bật (Bấm để Tắt)</button>
         </div>
 
         <div class="mod-sec">
@@ -284,6 +289,22 @@
         document.querySelectorAll("#speed-btns .mod-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
       });
+    });
+
+    // Mute button
+    let audioMuted = false;
+    const muteAudioBtn = document.getElementById("btn-mute-audio");
+    muteAudioBtn.addEventListener("click", async () => {
+      audioMuted = !audioMuted;
+      for (const ctx of capturedAudioContexts) {
+        try {
+          if (audioMuted) await ctx.suspend();
+          else await ctx.resume();
+        } catch (e) {}
+      }
+      muteAudioBtn.textContent = audioMuted
+        ? "🔇 Âm thanh: Đã Tắt (Bấm để Bật)"
+        : "🔊 Âm thanh: Đang Bật (Bấm để Tắt)";
     });
 
     const scanInput = document.getElementById("mod-scan-val");

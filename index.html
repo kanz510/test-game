@@ -81,6 +81,11 @@
     window._pokiBridge = "PokiUnitySDK";
     window.initPokiBridge = function (name) {
       window._pokiBridge = name || "PokiUnitySDK";
+      if (window.myGameInstance) {
+        window.myGameInstance.SendMessage(window._pokiBridge, "ready");
+      } else {
+        setTimeout(function () { window.initPokiBridge(window._pokiBridge); }, 100);
+      }
     };
     window.commercialBreak = function () {
       setTimeout(function () {
@@ -102,6 +107,15 @@
           window.myGameInstance.SendMessage(window._pokiBridge, "shareableURLResolved", "");
         }
       }, 50);
+    };
+    window.getUser = function () {
+      if (window.myGameInstance) window.myGameInstance.SendMessage(window._pokiBridge, "getUserResolved", "{}");
+    };
+    window.getToken = function () {
+      if (window.myGameInstance) window.myGameInstance.SendMessage(window._pokiBridge, "getTokenResolved", "");
+    };
+    window.login = function () {
+      if (window.myGameInstance) window.myGameInstance.SendMessage(window._pokiBridge, "loginResolved");
     };
 
     window.PokiSDK = {

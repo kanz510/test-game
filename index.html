@@ -7,7 +7,25 @@
     <title>Unity WebGL Player | Perfect Hotel</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-    <script src="mod-menu.js"></script>
+    <script>
+      // Giữ hàm quảng cáo rỗng để game không bị lỗi thiếu biến khi chạy offline/GitHub Pages
+      window.adsbygoogle = window.adsbygoogle || [];
+      window.adConfig = window.adBreak = function () {};
+      window.passBeforeAdData = function () {};
+      window.adBreakDoneData = function () {
+        if (window.myGameInstance) window.myGameInstance.SendMessage("GameObjectAds", "resumeGame");
+      };
+      window.gainReward = function () {
+        if (window.myGameInstance) {
+          window.myGameInstance.SendMessage("GameObjectAds", "resumeGameRewarded");
+          window.myGameInstance.SendMessage("GameObjectAds", "rewardAdsCompleted");
+        }
+      };
+      window.cancelReward = window.gainReward;
+      window.noRewardAdsAvailable = window.gainReward;
+      window.showNextAd = function () { setTimeout(window.adBreakDoneData, 50); };
+      window.showReward = function () { setTimeout(window.gainReward, 50); };
+    </script>
   </head>
   <body>
     <div id="unity-container" class="unity-desktop">

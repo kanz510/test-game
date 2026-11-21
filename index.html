@@ -57,24 +57,6 @@
       transition: width 0.15s ease;
     }
     #loading-pct { margin-top: 10px; font-size: 14px; color: #cbd5e1; }
-    #btn-sound-toggle {
-      position: fixed;
-      top: 14px;
-      right: 14px;
-      z-index: 99999;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.45);
-      background: rgba(15, 23, 42, 0.78);
-      color: #fff;
-      font-size: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-    }
   </style>
   <script>
     // Offline PokiSDK & PokiUnityBridge Mock (Không quảng cáo + Nhận thưởng tức thì)
@@ -138,28 +120,9 @@
       getLanguage: function () { return "en"; },
       getURLParam: function () { return ""; }
     };
-
-    // Bắt AudioContext an toàn qua AudioNode.prototype.connect để hỗ trợ nút tắt/bật tiếng
-    (function () {
-      var contexts = new Set();
-      var origConnect = AudioNode.prototype.connect;
-      AudioNode.prototype.connect = function () {
-        if (this.context) contexts.add(this.context);
-        return origConnect.apply(this, arguments);
-      };
-      window.__toggleGameMute = function (mute) {
-        contexts.forEach(function (ctx) {
-          try {
-            if (mute) ctx.suspend();
-            else ctx.resume();
-          } catch (e) {}
-        });
-      };
-    })();
   </script>
 </head>
 <body>
-  <button id="btn-sound-toggle" title="Bật/Tắt âm thanh">🔊</button>
   <div id="loading-overlay">
     <div id="loading-title">My Perfect Hotel</div>
     <div id="progress-track"><div id="progress-fill"></div></div>
@@ -170,17 +133,6 @@
   </div>
 
   <script>
-    (function () {
-      var isMuted = false;
-      var btn = document.getElementById("btn-sound-toggle");
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        isMuted = !isMuted;
-        btn.textContent = isMuted ? "🔇" : "🔊";
-        if (window.__toggleGameMute) window.__toggleGameMute(isMuted);
-      });
-    })();
-
     var buildUrl = "Build";
     var loaderUrl = buildUrl + "/ea153e321edf23b9a40b38d65ce41d01.loader.js";
     var config = {

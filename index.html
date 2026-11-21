@@ -25,9 +25,61 @@
       window.noRewardAdsAvailable = window.gainReward;
       window.showNextAd = function () { setTimeout(window.adBreakDoneData, 50); };
       window.showReward = function () { setTimeout(window.gainReward, 50); };
+
+      // Bắt AudioContext an toàn qua AudioNode.prototype.connect (không đụng vào constructor AudioContext)
+      (function () {
+        var contexts = new Set();
+        var origConnect = AudioNode.prototype.connect;
+        AudioNode.prototype.connect = function () {
+          if (this.context) contexts.add(this.context);
+          return origConnect.apply(this, arguments);
+        };
+        window.__toggleGameMute = function (mute) {
+          contexts.forEach(function (ctx) {
+            try {
+              if (mute) ctx.suspend();
+              else ctx.resume();
+            } catch (e) {}
+          });
+        };
+      })();
     </script>
+    <style>
+      #btn-sound-toggle {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 99999;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        background: rgba(15, 23, 42, 0.78);
+        color: #fff;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
   </head>
   <body>
+    <button id="btn-sound-toggle" title="Bật/Tắt âm thanh">🔊</button>
+    <script>
+      (function () {
+        var isMuted = false;
+        var btn = document.getElementById("btn-sound-toggle");
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          isMuted = !isMuted;
+          btn.textContent = isMuted ? "🔇" : "🔊";
+          if (window.__toggleGameMute) window.__toggleGameMute(isMuted);
+        });
+      })();
+    </script>
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas" width=960 height=640></canvas>
       <div id="unity-loading-bar">

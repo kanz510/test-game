@@ -1,4 +1,26 @@
 (function () {
+  // === 0. CHẶN QUẢNG CÁO & TỰ ĐỘNG NHẬN THƯỞNG (NO-ADS + INSTANT REWARD) ===
+  window.adsbygoogle = window.adsbygoogle || [];
+  window.adConfig = window.adBreak = function () {};
+  window.passBeforeAdData = function () {};
+  window.adBreakDoneData = function () {
+    if (window.myGameInstance) window.myGameInstance.SendMessage("GameObjectAds", "resumeGame");
+  };
+  window.gainReward = function () {
+    if (window.myGameInstance) {
+      window.myGameInstance.SendMessage("GameObjectAds", "resumeGameRewarded");
+      window.myGameInstance.SendMessage("GameObjectAds", "rewardAdsCompleted");
+    }
+  };
+  window.cancelReward = window.gainReward;
+  window.noRewardAdsAvailable = window.gainReward;
+  window.showNextAd = function () {
+    setTimeout(window.adBreakDoneData, 50);
+  };
+  window.showReward = function () {
+    setTimeout(window.gainReward, 50);
+  };
+
   // === 1. HOOK THỜI GIAN CHO SPEED HACK ===
   let speedMultiplier = 1;
   const origPerfNow = performance.now.bind(performance);

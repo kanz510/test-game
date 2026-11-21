@@ -45,20 +45,8 @@
     });
   };
 
-  // === 2. HOOK WEBASSEMBLY MEMORY & WEBAUDIO MUTE ===
+  // === 2. HOOK WEBASSEMBLY MEMORY ĐỂ QUÉT & SỬA TIỀN/KIM CƯƠNG ===
   window.__wasmMemory = null;
-  const origAC = window.AudioContext || window.webkitAudioContext;
-  const capturedAudioContexts = [];
-  if (origAC) {
-    const WrappedAC = function (...args) {
-      const ctx = new origAC(...args);
-      capturedAudioContexts.push(ctx);
-      return ctx;
-    };
-    WrappedAC.prototype = origAC.prototype;
-    if (window.AudioContext) window.AudioContext = WrappedAC;
-    if (window.webkitAudioContext) window.webkitAudioContext = WrappedAC;
-  }
 
   function captureMemory(importObj, result) {
     try {
@@ -168,8 +156,8 @@
     style.textContent = `
       #mod-root {
         position: fixed;
-        top: 12px;
-        left: 12px;
+        top: 14px;
+        left: 14px;
         z-index: 999999;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         color: #f8fafc;
@@ -178,40 +166,43 @@
       #mod-toggle {
         background: linear-gradient(135deg, #0ea5e9, #6366f1);
         color: #fff;
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 2px solid rgba(255,255,255,0.45);
         border-radius: 999px;
-        padding: 8px 14px;
+        padding: 12px 18px;
         font-weight: 800;
-        font-size: 13px;
+        font-size: 16px;
         cursor: pointer;
-        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.45);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5);
       }
       #mod-panel {
         display: none;
-        margin-top: 8px;
-        width: 280px;
-        background: rgba(15, 23, 42, 0.92);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(56, 189, 248, 0.4);
-        border-radius: 14px;
-        padding: 14px;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
-        font-size: 12px;
+        margin-top: 10px;
+        width: min(92vw, 360px);
+        max-height: 78dvh;
+        overflow-y: auto;
+        background: rgba(15, 23, 42, 0.94);
+        backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(56, 189, 248, 0.5);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.75);
+        font-size: 15px;
       }
       #mod-panel.open { display: block; }
-      .mod-sec { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(148,163,184,0.2); }
+      .mod-sec { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(148,163,184,0.25); }
       .mod-sec:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-      .mod-title { font-weight: 700; color: #38bdf8; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .mod-row { display: flex; gap: 6px; margin-bottom: 6px; }
+      .mod-title { font-weight: 800; color: #38bdf8; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .mod-row { display: flex; gap: 8px; margin-bottom: 8px; }
       .mod-btn {
         flex: 1;
-        padding: 7px 6px;
-        border: 1px solid rgba(148,163,184,0.3);
-        border-radius: 8px;
+        min-height: 44px;
+        padding: 10px 8px;
+        border: 1px solid rgba(148,163,184,0.35);
+        border-radius: 10px;
         background: #1e293b;
         color: #e2e8f0;
         font-weight: 700;
-        font-size: 12px;
+        font-size: 15px;
         cursor: pointer;
       }
       .mod-btn.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
@@ -219,17 +210,19 @@
       .mod-btn.warn { background: #b91c1c; border: none; color: #fff; }
       .mod-input {
         width: 100%;
-        padding: 7px 9px;
-        border-radius: 8px;
-        border: 1px solid rgba(148,163,184,0.35);
+        box-sizing: border-box;
+        padding: 11px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(148,163,184,0.4);
         background: #0f172a;
         color: #fff;
-        font-size: 13px;
-        margin-bottom: 6px;
+        font-size: 16px;
+        margin-bottom: 8px;
         outline: none;
       }
-      .mod-status { font-size: 11px; color: #cbd5e1; margin-top: 4px; line-height: 1.4; }
-      .mod-check { display: flex; align-items: center; gap: 6px; cursor: pointer; margin-top: 6px; color: #cbd5e1; }
+      .mod-status { font-size: 13px; color: #cbd5e1; margin-top: 6px; line-height: 1.45; }
+      .mod-check { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px; color: #cbd5e1; font-size: 14px; }
+      .mod-check input { width: 20px; height: 20px; }
     `;
     document.head.appendChild(style);
 
@@ -239,14 +232,13 @@
       <button id="mod-toggle">🛠️ MOD MENU</button>
       <div id="mod-panel">
         <div class="mod-sec">
-          <div class="mod-title">⚡ Tốc độ Game & Âm thanh</div>
+          <div class="mod-title">⚡ Tốc độ Game (Speed Hack)</div>
           <div class="mod-row" id="speed-btns">
             <button class="mod-btn active" data-spd="1">1x</button>
             <button class="mod-btn" data-spd="2">2x</button>
             <button class="mod-btn" data-spd="3">3x</button>
             <button class="mod-btn" data-spd="5">5x</button>
           </div>
-          <button id="btn-mute-audio" class="mod-btn" style="width:100%;">🔊 Âm thanh: Đang Bật (Bấm để Tắt)</button>
         </div>
 
         <div class="mod-sec">
@@ -289,22 +281,6 @@
         document.querySelectorAll("#speed-btns .mod-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
       });
-    });
-
-    // Mute button
-    let audioMuted = false;
-    const muteAudioBtn = document.getElementById("btn-mute-audio");
-    muteAudioBtn.addEventListener("click", async () => {
-      audioMuted = !audioMuted;
-      for (const ctx of capturedAudioContexts) {
-        try {
-          if (audioMuted) await ctx.suspend();
-          else await ctx.resume();
-        } catch (e) {}
-      }
-      muteAudioBtn.textContent = audioMuted
-        ? "🔇 Âm thanh: Đã Tắt (Bấm để Bật)"
-        : "🔊 Âm thanh: Đang Bật (Bấm để Tắt)";
     });
 
     const scanInput = document.getElementById("mod-scan-val");

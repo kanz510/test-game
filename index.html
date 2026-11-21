@@ -77,7 +77,33 @@
     }
   </style>
   <script>
-    // Offline PokiSDK Mock (Không quảng cáo + Nhận thưởng tức thì)
+    // Offline PokiSDK & PokiUnityBridge Mock (Không quảng cáo + Nhận thưởng tức thì)
+    window._pokiBridge = "PokiUnitySDK";
+    window.initPokiBridge = function (name) {
+      window._pokiBridge = name || "PokiUnitySDK";
+    };
+    window.commercialBreak = function () {
+      setTimeout(function () {
+        if (window.myGameInstance) {
+          window.myGameInstance.SendMessage(window._pokiBridge, "commercialBreakCompleted");
+        }
+      }, 50);
+    };
+    window.rewardedBreak = function () {
+      setTimeout(function () {
+        if (window.myGameInstance) {
+          window.myGameInstance.SendMessage(window._pokiBridge, "rewardedBreakCompleted", "true");
+        }
+      }, 50);
+    };
+    window.shareableURL = function () {
+      setTimeout(function () {
+        if (window.myGameInstance) {
+          window.myGameInstance.SendMessage(window._pokiBridge, "shareableURLResolved", "");
+        }
+      }, 50);
+    };
+
     window.PokiSDK = {
       init: function () { return Promise.resolve(); },
       setDebug: function () {},

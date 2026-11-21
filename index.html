@@ -30,9 +30,9 @@
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/My_Perfect_Hotel_output_v17.loader.js";
       var config = {
-        dataUrl: buildUrl + "/My_Perfect_Hotel_output_v17.data.br",
-        frameworkUrl: buildUrl + "/My_Perfect_Hotel_output_v17.framework.js.br",
-        codeUrl: buildUrl + "/My_Perfect_Hotel_output_v17.wasm.br",
+        dataUrl: buildUrl + "/My_Perfect_Hotel_output_v17.data",
+        frameworkUrl: buildUrl + "/My_Perfect_Hotel_output_v17.framework.js",
+        codeUrl: buildUrl + "/My_Perfect_Hotel_output_v17.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "perfect",
         productName: "Perfect Hotel",
@@ -55,13 +55,10 @@
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         container.className = "unity-mobile";
-        // Avoid draining fillrate performance on mobile devices,
-        // and default/override low DPI mode on mobile browsers.
         config.devicePixelRatio = 1;
-        mobileWarning.style.display = "block";
-        setTimeout(() => {
-          mobileWarning.style.display = "none";
-        }, 5000);
+        canvas.style.width = "100vw";
+        canvas.style.height = "100dvh";
+        mobileWarning.style.display = "none";
       } else {
         canvas.style.width = "960px";
         canvas.style.height = "640px";

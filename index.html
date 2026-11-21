@@ -75,8 +75,28 @@
         if (window.myGameInstance) {
           window.myGameInstance.SendMessage(window._pokiBridge, "commercialBreakCompleted");
         }
-      }, 50);
+      }, 100);
     };
+
+    // Tự động đánh thức âm thanh ngầm trên iPhone Safari nếu bị suspended khi mở popup
+    (function () {
+      var contexts = new Set();
+      var origConnect = AudioNode.prototype.connect;
+      AudioNode.prototype.connect = function () {
+        if (this.context) contexts.add(this.context);
+        return origConnect.apply(this, arguments);
+      };
+      function wakeAudio() {
+        contexts.forEach(function (ctx) {
+          if (ctx.state !== "running") {
+            try { ctx.resume(); } catch (e) {}
+          }
+        });
+      }
+      ["touchstart", "pointerdown", "click"].forEach(function (ev) {
+        window.addEventListener(ev, wakeAudio, { passive: true, capture: true });
+      });
+    })();
     window.rewardedBreak = function () {
       setTimeout(function () {
         if (window.myGameInstance) {
